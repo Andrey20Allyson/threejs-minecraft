@@ -1,0 +1,26 @@
+{
+  "name": "threejs-tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "serve dist",
+    "dev:build": "tsc -p src && webpack --mode development",
+    "prod:build": "tsc -p src && webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/three": "^0.146.0",
+    "serve": "^14.1.2",
+    "ts-loader": "^9.4.2",
+    "typescript": "^4.9.4",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
+  },
+  "dependencies": {
+    "three": "^0.148.0"
+  }
+}

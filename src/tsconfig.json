@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "outDir": "../javascript/",
+    "rootDir": "./",
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "target": "ES2022",
+    // "skipLibCheck": true,
+    "strict": true,
+    "jsx": "react",
+    "allowJs": true,
+    "moduleResolution": "node",
+  }
+}
