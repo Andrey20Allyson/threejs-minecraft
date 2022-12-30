@@ -19,6 +19,8 @@ mouse.on('move', (ev, moveX, moveY) => {
     camera.rotateX(moveY * -.01);
 });
 
+const cube = scene.createTexturedCube('./Saul.png');
+
 interface IKeyboardHandlers {
   [k: string]: Function | undefined
 }
@@ -41,6 +43,9 @@ keyboard.on('keydown', (ev) => {
 
 scene.on('frame', (time) => {
   const { w, a, s, d } = keyboard.keysNumber;
+
+  cube.rotateX(.01);
+  cube.rotateY(.01);
 
   const direction = new thr.Vector3(
     (d - a) * .1,

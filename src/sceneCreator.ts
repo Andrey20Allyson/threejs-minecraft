@@ -5,6 +5,7 @@ export class PersonalizedScene extends EventEmitter {
   private _scene: thr.Scene;
   private _camera: thr.Camera;
   private _renderer: thr.WebGLRenderer;
+  private _textureLoader: thr.TextureLoader;
 
   private _paused: boolean;
 
@@ -14,13 +15,16 @@ export class PersonalizedScene extends EventEmitter {
     this._scene = new thr.Scene();
     
     this._camera = new thr.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-    
+    this._camera.position.z = 5;
+
     this._renderer = new thr.WebGLRenderer();
     this._renderer.setSize( window.innerWidth, window.innerHeight );
     this._renderer.shadowMap.enabled = true;
 
+    this._textureLoader = new thr.TextureLoader();
+
     document.body.appendChild( this._renderer.domElement );
-    
+
     this._paused = true;
   }
 
@@ -56,30 +60,51 @@ export class PersonalizedScene extends EventEmitter {
     this._renderer.render( this._scene, this._camera );
   }
 
+  createTexturedCube(textureName: string) {
+    const geometry = new thr.BoxGeometry(1, 1, 1);
+    let texture;
+
+    try {
+      texture = this._textureLoader.load(textureName);
+    } catch (e) {
+      console.log(e);
+    }
+
+    const material = new thr.MeshPhongMaterial({
+      color: 0xffffff,
+      map: texture
+    });
+
+    const cube = new thr.Mesh( geometry, material );
+
+    this._scene.add(cube);
+
+    return cube;
+  }
+
   get camera() {
     return this._camera;
   }
 
+  get scene() {
+    return this._scene;
+  }
+
+  get renderer() {
+    return this._renderer;
+  }
+
   static createScene() {
     const PScene = new this();
-
-    const geometry = new thr.BoxGeometry( 1, 1, 1 );
-    const texture = new thr.TextureLoader().load('./Saul.png');
-    const material = new thr.MeshPhongMaterial( { color: 0xffffff, shadowSide: thr.FrontSide, map: texture } );
-
-    const cube = new thr.Mesh( geometry, material );
 
     const ambientLight = new thr.AmbientLight(0x555555);
 
     const light = new thr.DirectionalLight();
     light.position.set( 0.5, 0.5, 1 );
 
-    PScene._camera.position.z = 5;
-
     const grid = new thr.GridHelper();
     grid.position.y -= 1;
 
-    PScene._scene.add( cube );
     PScene._scene.add( light );
     PScene._scene.add( grid );
     PScene._scene.add( ambientLight );
