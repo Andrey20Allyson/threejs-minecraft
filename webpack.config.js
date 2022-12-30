@@ -2,7 +2,7 @@ const { config } = require('webpack');
 const path = require('path');
 
 const webpackConfig = config.getNormalizedWebpackOptions({
-  entry: './src/transpiled/index.js',
+  entry: './javascript/index.js',
   mode: 'production',
   // module: {
   //   rules: [
