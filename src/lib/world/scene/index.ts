@@ -5,7 +5,6 @@ export class WorldScene extends EventEmitter {
   private _scene: thr.Scene;
   private _camera: thr.Camera;
   private _renderer: thr.WebGLRenderer;
-  private _textureLoader: thr.TextureLoader;
   private _light: thr.DirectionalLight;
   private _ambientLight: thr.AmbientLight;
 
@@ -30,8 +29,6 @@ export class WorldScene extends EventEmitter {
     this._renderer = new thr.WebGLRenderer();
     this._renderer.setSize( window.innerWidth, window.innerHeight );
     this._renderer.shadowMap.enabled = true;
-
-    this._textureLoader = new thr.TextureLoader();
 
     document.body.appendChild( this._renderer.domElement );
 
@@ -70,16 +67,8 @@ export class WorldScene extends EventEmitter {
     this._renderer.render( this._scene, this._camera );
   }
 
-  createTexturedCube(textureName: string) {
+  createTexturedCube(texture: thr.Texture) {
     const geometry = new thr.BoxGeometry(1, 1, 1);
-    let texture;
-
-    try {
-      texture = this._textureLoader.load(textureName);
-    } catch (e) {
-      console.log(e);
-    }
-
     const material = new thr.MeshPhongMaterial({
       color: 0xffffff,
       map: texture

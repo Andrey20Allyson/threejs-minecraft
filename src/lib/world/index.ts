@@ -1,11 +1,19 @@
 import { WorldScene } from "./scene";
 import * as thr from 'three';
 import { EventEmitter } from "events";
-import { PhysicCube } from "./cube/PysicCube";
-import { Cube } from './cube/Cube';
+import { PhysicCube, Cube, CubeTypes } from "./cube";
+import { WorldAssets, LoadTexturesParam } from "./assets";
 
 export class World extends EventEmitter {
+  static readonly defaultTextures: LoadTexturesParam[] = [
+    {
+      name: 'dirt',
+      url: './textures/dirt.png',
+    }
+  ];
+
   private _scene: WorldScene;
+  private _assets: WorldAssets;
   private _blocks: PhysicCube[];
   private _entities: any[];
   private _running: boolean;
@@ -14,6 +22,8 @@ export class World extends EventEmitter {
 
   constructor() {
     super();
+
+    this._assets = new WorldAssets();
 
     this._blocks = [];
     this._entities = [];
@@ -35,6 +45,10 @@ export class World extends EventEmitter {
     return super.emit(eventName, ...args);
   }
 
+  loadWorld() {
+    
+  }
+
   start() {
     this._running = true;
 
@@ -50,8 +64,9 @@ export class World extends EventEmitter {
   }
 
   simulate() {
-    if(this._running)
-      setTimeout(() => this.simulate(), 1000 / this._tickRate);
+    setTimeout(() => {
+      if(this._running) this.simulate();
+    }, 1000 / this._tickRate);
 
     this.emit('tick', this._tickCount);
 
@@ -62,7 +77,14 @@ export class World extends EventEmitter {
     return this._scene;
   }
 
-  createCube(type: string) {
-    
+  get assets() {
+    return this._assets;
+  }
+
+  createCube<K extends keyof CubeTypes>(type: K): CubeTypes[K] {
+    if (type === 'dirt')
+      return new Cube(this._assets.getTexture('./textures/dirt.png'));
+
+    throw new Error('This type dont exists!');
   }
 }
