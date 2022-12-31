@@ -22,14 +22,43 @@ export namespace Enums {
   }
 }
 
-export class WorldAssets {
-  private _loadedTextures: TextureMap;
-  private _loadState: Enums.AssetsLoadedState;
-  private _textureLoader: thr.TextureLoader;
+export interface Storage<T> {
+  [key: string | symbol]: T | undefined;
+}
+
+export class Storer<T> {
+  private _storage: Storage<T>;
 
   constructor() {
-    this._loadedTextures = {};
+    this._storage = {};
+  }
+
+  get(key: string | symbol): T {
+    const value = this._storage[key];
+
+    if (!value) throw new Error('Value not found!');
+  
+    return value;
+  }
+
+  set(key: string | symbol, value: T) {
+    this._storage[key] = value;
+  }
+
+  remove(key: string | symbol) {
+    return delete this._storage[key];
+  }
+}
+
+export class WorldAssets {
+  private _loadState: Enums.AssetsLoadedState;
+  private _textureLoader: thr.TextureLoader;
+  readonly textures: Storer<thr.Texture>;
+
+  constructor() {
     this._loadState = Enums.AssetsLoadedState.NOT_LOADED;
+
+    this.textures = new Storer();
 
     this._textureLoader = new thr.TextureLoader();
   }
@@ -82,7 +111,7 @@ export class WorldAssets {
     try {
       const texture = await this._textureLoader.loadAsync(url);
     
-      this.setTexture(name, texture);
+      this.textures.set(name, texture);
 
       return true;
     } catch (e) {
@@ -90,21 +119,5 @@ export class WorldAssets {
 
       return false;
     }
-  }
-
-  setTexture(name: string, texture: thr.Texture) {
-    this._loadedTextures[name] = texture;
-  }
-
-  getTexture(name: string) {
-    const texture = this._loadedTextures[name];
-
-    if (!texture) throw new Error('Texture not found!');
-
-    return texture;
-  }
-
-  removeTexture(name: string) {
-    return delete this._loadedTextures[name];
   }
 }

@@ -8,7 +8,7 @@ export class World extends EventEmitter {
   static readonly defaultTextures: LoadTexturesParam[] = [
     {
       name: 'dirt',
-      url: './textures/dirt.png',
+      url: './textures/Dirt.png',
     }
   ];
 
@@ -83,7 +83,7 @@ export class World extends EventEmitter {
 
   createCube<K extends keyof CubeTypes>(type: K): CubeTypes[K] {
     if (type === 'dirt')
-      return new Cube(this._assets.getTexture('./textures/dirt.png'));
+      return new Cube(this._assets.textures.get('dirt'));
 
     throw new Error('This type dont exists!');
   }
