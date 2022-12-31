@@ -1,10 +1,12 @@
 import { WorldScene } from "./scene";
 import * as thr from 'three';
 import { EventEmitter } from "events";
-import { PhysicCube, Cube, CubeTypes } from "./cube";
+import { PhysicCube, CubeTypes, CubeFaces } from "./physics/cube";
 import { WorldAssets, LoadTexturesParam } from "./assets";
+import { PhysicSpace } from "./physics";
 
 export class World extends EventEmitter {
+  static readonly defaultTickRate: number = 40; 
   static readonly defaultTextures: LoadTexturesParam[] = [
     {
       name: 'dirt',
@@ -14,8 +16,7 @@ export class World extends EventEmitter {
 
   private _scene: WorldScene;
   private _assets: WorldAssets;
-  private _blocks: PhysicCube[];
-  private _entities: any[];
+  private _space: PhysicSpace;
   private _running: boolean;
   private _tickRate: number;
   private _tickCount: number;
@@ -24,13 +25,11 @@ export class World extends EventEmitter {
     super();
 
     this._assets = new WorldAssets();
+    this._space = new PhysicSpace();
 
-    this._blocks = [];
-    this._entities = [];
-
-    this._running = false;
-    this._tickRate = 20;
+    this._tickRate = World.defaultTickRate;
     this._tickCount = 0;
+    this._running = false;
 
     this._scene = WorldScene.createScene();
   }
@@ -45,11 +44,29 @@ export class World extends EventEmitter {
     return super.emit(eventName, ...args);
   }
 
-  loadWorld() {
+  generate() {
+    const newChunk = [];
+
+    const texture = this._assets.textures.get('dirt');
+
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        const cube = this.space.createCube(texture);
+        
+        cube.position.set(i, 0, j);
+
+        newChunk.push(cube);
+
+        this.scene.scene.add(cube);
+      }
+    }
     
+    this._space.chunks.push(newChunk);
   }
 
   start() {
+    if (this._running) return;
+
     this._running = true;
 
     this._scene.start();
@@ -73,18 +90,19 @@ export class World extends EventEmitter {
     this._tickCount++;
   }
 
+  get running() {
+    return this._running;
+  }
+
   get scene() {
     return this._scene;
   }
 
-  get assets() {
-    return this._assets;
+  get space() {
+    return this._space;
   }
 
-  createCube<K extends keyof CubeTypes>(type: K): CubeTypes[K] {
-    if (type === 'dirt')
-      return new Cube(this._assets.textures.get('dirt'));
-
-    throw new Error('This type dont exists!');
+  get assets() {
+    return this._assets;
   }
 }

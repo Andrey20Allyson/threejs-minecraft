@@ -54,6 +54,8 @@ export class WorldScene extends EventEmitter {
   }
 
   start() {
+    if (!this._paused) return;
+
     this._paused = false;
     requestAnimationFrame( (time) => this.animate(time) );
   }
@@ -65,20 +67,6 @@ export class WorldScene extends EventEmitter {
     this.emit('frame', time);
   
     this._renderer.render( this._scene, this._camera );
-  }
-
-  createTexturedCube(texture: thr.Texture) {
-    const geometry = new thr.BoxGeometry(1, 1, 1);
-    const material = new thr.MeshPhongMaterial({
-      color: 0xffffff,
-      map: texture
-    });
-
-    const cube = new thr.Mesh( geometry, material );
-
-    this._scene.add(cube);
-
-    return cube;
   }
 
   get camera() {

@@ -10,7 +10,7 @@ export interface LoadTexturesParam {
 }
 
 export interface LoadAssetsParams {
-  texture: LoadTexturesParam[];
+  textures: LoadTexturesParam[];
 }
 
 export namespace Enums {
@@ -68,7 +68,7 @@ export class WorldAssets {
   }
 
   async load(params: LoadAssetsParams) {
-    const texturesPromise = this.loadTextures(...(params.texture ?? []));
+    const texturesPromise = this.loadTextures(...(params.textures ?? []));
 
     try {
       const results = await Promise.all([
@@ -110,7 +110,9 @@ export class WorldAssets {
   async loadTexture(name: string, url: string) {
     try {
       const texture = await this._textureLoader.loadAsync(url);
-    
+      texture.magFilter = thr.NearestFilter;
+      texture.minFilter = thr.LinearMipMapLinearFilter;
+
       this.textures.set(name, texture);
 
       return true;
