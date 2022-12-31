@@ -1,5 +1,9 @@
 import * as thr from 'three';
 
+export interface CubeTypes {
+  'dirt': Cube;
+}
+
 export abstract class PhysicCube extends thr.Mesh<thr.BoxGeometry, thr.MeshPhysicalMaterial> {
   readonly cubeType: string;
 
@@ -11,4 +15,8 @@ export abstract class PhysicCube extends thr.Mesh<thr.BoxGeometry, thr.MeshPhysi
 
     this.cubeType = 'undefined';
   }
+}
+
+export class Cube extends PhysicCube {
+  
 }
