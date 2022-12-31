@@ -51,17 +51,13 @@ export class World extends EventEmitter {
 
     for (let i = 0; i < 10; i++) {
       for (let j = 0; j < 10; j++) {
-        const cube = this.space.createCube(texture);
-        
-        cube.position.set(i, 0, j);
+        const cube = this.space.createCube(new thr.Vector3(i, 0, j), texture);
 
         newChunk.push(cube);
 
         this.scene.scene.add(cube);
       }
     }
-    
-    this._space.chunks.push(newChunk);
   }
 
   start() {
