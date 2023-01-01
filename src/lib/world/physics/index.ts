@@ -25,12 +25,46 @@ export class Chunk {
     this._cubes[Chunk.parseIndex(x, y, z)] = value;
   }
 
-  get(x: number, y: number, z: number): PhysicCube | undefined {
-    return this._cubes[Chunk.parseIndex(x, y, z)];
+  setByVector3(position: thr.Vector3, value: PhysicCube) {
+    const { x, y, z } = position;
+    this.set(x, y, z, value);
   }
 
-  at(index: number) {
+  get(x: number, y: number, z: number) {
+    return this.at(Chunk.parseIndex(x, y, z));
+  }
+
+  getByVector3(postion: thr.Vector3) {
+    const { x, y, z } = postion;
+    return this.get(x, y, z);
+  }
+
+  at(index: number): PhysicCube | undefined {
     return this._cubes[index];
+  }
+
+  has(x: number, y: number, z: number) {
+    return this.get(x, y, z)? true: false;
+  }
+
+  hasInVector3(position: thr.Vector3) {
+    const { x, y, z } = position;
+    return this.has(x, y, z);
+  }
+
+  remove(x: number, y: number, z: number) {
+    const index = Chunk.parseIndex(x, y, z);
+
+    const cube = this.at(index);
+
+    delete this._cubes[index];
+  
+    return cube;
+  }
+
+  removeByVector3(position: thr.Vector3) {
+    const { x, y, z } = position
+    return this.remove(x, y, z);
   }
 
   static parseIndex(x: number, y: number, z: number) {
@@ -87,7 +121,7 @@ export class PhysicSpace {
   getChunkByVector3(position: thr.Vector3) {
     const searchLocation = Chunk.Vector2ToChunkLocation(position.x, position.z);
 
-    this.getChunkByLocation(searchLocation);
+    return this.getChunkByLocation(searchLocation);
   }
 
   placeInChunk(cube: PhysicCube, force: boolean = false) {
@@ -98,25 +132,56 @@ export class PhysicSpace {
     let chunk = this.getChunkByLocation(chunkLocation);
 
     if (!chunk)
-      chunk = this.createChunk(chunkLocation.x, chunkLocation.y)
+      chunk = this.createChunk(chunkLocation.x, chunkLocation.y);
 
     if (force || chunk.get(x, y, z))
       chunk.set(x, y, z, cube);
   }
 
-  createCube(position: thr.Vector3, texture: thr.Texture) {
-    const cube = new Cube(texture);
-    
-    const { x, y, z } = position;
-    
-    cube.position.set(x, y, z);
+  addCube(cube: PhysicCube, position?: thr.Vector3) {
+    if (position) {
+      const { x, y, z } = position;
+      cube.position.set(x, y, z);
+    }
 
     this.placeInChunk(cube);
 
     return cube;
   }
 
-  removeCube() {
-    
+  getCube(position: thr.Vector3) {
+    const chunk = this.getChunkByVector3(position);
+
+    if (!chunk) return;
+
+    return chunk.getByVector3(position);
+  }
+
+  moveCube(oldPosition: thr.Vector3, newPosition: thr.Vector3): boolean {
+    const oldChunk = this.getChunkByVector3(oldPosition);
+    const newChunk = this.getChunkByVector3(newPosition);
+
+    if (!oldChunk || !newChunk) return false;
+
+    const cube = oldChunk.removeByVector3(oldPosition);
+
+    if (!cube) return false;
+
+    newChunk.setByVector3(newPosition, cube);
+
+    return true;
+  }
+
+  createCube(position: thr.Vector3, texture: thr.Texture) {
+    return this.addCube(new Cube(texture), position);
+  }
+
+  removeCube(position: thr.Vector3) {
+    const chunk = this.getChunkByVector3(position);
+    const { x, y, z } = position;
+
+    if (!chunk) return;
+
+    return chunk.remove(x, y, z);
   }
 }
