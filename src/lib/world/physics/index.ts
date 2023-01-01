@@ -1,7 +1,30 @@
 import * as thr from 'three';
 import { Cube, CubeTypes, PhysicCube } from './cube';
 
-export class ChunkLocation extends thr.Vector2 {}
+export class ChunkLocation extends thr.Vector2 {
+  private constructor(x?: number, y?: number) {
+    super(x, y);
+  }
+
+  static fromXY(x: number, y: number) {
+    return new this(
+      Math.floor(x / Chunk.WIDTH),
+      Math.floor(y / Chunk.DEPTH)
+    );
+  }
+  
+  static fromVector2(position: thr.Vector2) {
+    const { x, y } = position;
+
+    return this.fromXY(x, y);
+  }
+
+  static fromVector3(position: thr.Vector3) {
+    const { x, z } = position;
+
+    return this.fromXY(x, z);
+  }
+}
 
 export class Chunk {
   static readonly WIDTH = 16;
@@ -14,7 +37,7 @@ export class Chunk {
   constructor(x: number, y: number) {
     this._cubes = new Array(Chunk.WIDTH * Chunk.DEPTH * Chunk.HEIGHT);
 
-    this._location = new ChunkLocation(x, y);
+    this._location = ChunkLocation.fromXY(x, y);
   }
 
   get location() {
@@ -28,6 +51,10 @@ export class Chunk {
   setByVector3(position: thr.Vector3, value: PhysicCube) {
     const { x, y, z } = position;
     this.set(x, y, z, value);
+  }
+
+  addCube(cube: PhysicCube) {
+    this.setByVector3(cube.position, cube);
   }
 
   get(x: number, y: number, z: number) {
@@ -74,13 +101,6 @@ export class Chunk {
       (z % this.DEPTH ) * this.WIDTH * this.HEIGHT
     ); 
   }
-
-  static Vector2ToChunkLocation(x: number, y: number) {
-    return new ChunkLocation(
-      Math.floor(x / this.WIDTH),
-      Math.floor(y / this.DEPTH)
-    );
-  }
 }
 
 export class PhysicSpace {
@@ -119,23 +139,21 @@ export class PhysicSpace {
   }
 
   getChunkByVector3(position: thr.Vector3) {
-    const searchLocation = Chunk.Vector2ToChunkLocation(position.x, position.z);
+    const searchLocation = ChunkLocation.fromVector3(position);
 
     return this.getChunkByLocation(searchLocation);
   }
 
   placeInChunk(cube: PhysicCube, force: boolean = false) {
-    const { x, y, z } = cube.position;
-
-    const chunkLocation = Chunk.Vector2ToChunkLocation(x, z);
+    const chunkLocation = ChunkLocation.fromVector3(cube.position);
 
     let chunk = this.getChunkByLocation(chunkLocation);
 
     if (!chunk)
       chunk = this.createChunk(chunkLocation.x, chunkLocation.y);
 
-    if (force || chunk.get(x, y, z))
-      chunk.set(x, y, z, cube);
+    if (force || chunk.hasInVector3(cube.position))
+      chunk.addCube(cube);
   }
 
   addCube(cube: PhysicCube, position?: thr.Vector3) {
@@ -178,10 +196,9 @@ export class PhysicSpace {
 
   removeCube(position: thr.Vector3) {
     const chunk = this.getChunkByVector3(position);
-    const { x, y, z } = position;
 
     if (!chunk) return;
 
-    return chunk.remove(x, y, z);
+    return chunk.removeByVector3(position);
   }
 }
