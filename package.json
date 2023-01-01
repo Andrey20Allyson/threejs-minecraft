@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "serve dist",
+    "start": "serve public",
     "dev:build": "tsc -p src && webpack --mode development",
     "prod:build": "tsc -p src && webpack"
   },
@@ -13,6 +13,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/events": "^3.0.0",
+    "@types/lodash": "^4.14.191",
     "@types/three": "^0.146.0",
     "serve": "^14.1.2",
     "ts-loader": "^9.4.2",
@@ -21,6 +23,8 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
+    "events": "^3.3.0",
+    "lodash": "^4.17.21",
     "three": "^0.148.0"
   }
 }

@@ -1,61 +1,53 @@
+import { World } from './lib/world';
+import { MouseListener, KeyboardListener } from './lib/inputs';
 import * as thr from 'three';
-import { PersonalizedScene } from './sceneCreator';
-import { KeyboardListener, MouseListener } from './userInputs';
 
-const scene = PersonalizedScene.createScene();
-const camera = scene.camera;
+async function main() {
+  const world = new World();
+  const mouse = new MouseListener( document.body );
+  const keyboard = new KeyboardListener( document.body );
 
-const mouse = new MouseListener( document.body );
-const keyboard = new KeyboardListener( document.body );
+  const camera = world.scene.camera;
+  const CAMERA_MOVEMENT_SPEED = 0.05;
+  const CAMERA_ROTATE_SPEED = 0.01;
 
-mouse.on('move', (ev, moveX, moveY) => {
-  if (!mouse.clicking) return;
+  const success = await world.assets.load({
+    textures: World.defaultTextures
+  });
 
-  const worldDirection = camera.getWorldDirection(camera.position.clone());
+  mouse.on('move', (ev, mx, my) => {
+    if (!mouse.clicking) return;
 
-  camera.rotateOnWorldAxis(new thr.Vector3(0, 1, 0), moveX * -.01);
-  
-  if ((worldDirection.y < .9 || moveY > 0) && (worldDirection.y > -.9 || moveY < 0))
-    camera.rotateX(moveY * -.01);
-});
+    camera.rotateX(my * -CAMERA_ROTATE_SPEED);
+    camera.rotateOnWorldAxis(new thr.Vector3(0, 1, 0), mx * -CAMERA_ROTATE_SPEED);
+  });
 
-const cube = scene.createTexturedCube('./Saul.png');
-
-interface IKeyboardHandlers {
-  [k: string]: Function | undefined
-}
-
-const handlers: IKeyboardHandlers = {
-  'p'() {
-    if (scene.paused) {
-      scene.start();
+  keyboard.on('keyup', (ev) => {
+    if (ev.key !== 'p') return;
+    if (world.running) {
+      world.pause();
     } else {
-      scene.pause();
-    }
-  }
+      world.start();
+    };
+  });
+
+  world.on('tick', count => {
+    const { w, a, s, d } = keyboard.keysNumber;
+
+    const direction = new thr.Vector3(
+      (d - a) * CAMERA_MOVEMENT_SPEED,
+      0,
+      (s - w) * CAMERA_MOVEMENT_SPEED
+    );
+
+    direction.applyEuler(camera.rotation);
+    
+    camera.position.add(direction);
+  });
+
+  world.generate();
+  
+  world.start();
 }
 
-keyboard.on('keydown', (ev) => {
-  const handler = handlers[ev.key];
-
-  if (handler) handler();
-});
-
-scene.on('frame', (time) => {
-  const { w, a, s, d } = keyboard.keysNumber;
-
-  cube.rotateX(.01);
-  cube.rotateY(.01);
-
-  const direction = new thr.Vector3(
-    (d - a) * .1,
-    0,
-    (s - w) * .1
-  );
-  
-  direction.applyEuler(camera.rotation);
-
-  camera.position.add(direction);
-});
-
-scene.start();
+main();

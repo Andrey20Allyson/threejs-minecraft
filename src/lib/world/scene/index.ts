@@ -1,11 +1,12 @@
 import * as thr from "three";
-import { EventEmitter } from "./events";
+import { EventEmitter } from "events";
 
-export class PersonalizedScene extends EventEmitter {
+export class WorldScene extends EventEmitter {
   private _scene: thr.Scene;
   private _camera: thr.Camera;
   private _renderer: thr.WebGLRenderer;
-  private _textureLoader: thr.TextureLoader;
+  private _light: thr.DirectionalLight;
+  private _ambientLight: thr.AmbientLight;
 
   private _paused: boolean;
 
@@ -13,15 +14,21 @@ export class PersonalizedScene extends EventEmitter {
     super();
 
     this._scene = new thr.Scene();
-    
+
+    this._ambientLight = new thr.AmbientLight(0x555555);
+
+    this._light = new thr.DirectionalLight();
+    this._light.position.set( 0.5, 0.5, 1 );
+
+    this._scene.add(this._ambientLight);
+    this._scene.add(this._light);
+
     this._camera = new thr.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
     this._camera.position.z = 5;
 
     this._renderer = new thr.WebGLRenderer();
     this._renderer.setSize( window.innerWidth, window.innerHeight );
     this._renderer.shadowMap.enabled = true;
-
-    this._textureLoader = new thr.TextureLoader();
 
     document.body.appendChild( this._renderer.domElement );
 
@@ -47,6 +54,8 @@ export class PersonalizedScene extends EventEmitter {
   }
 
   start() {
+    if (!this._paused) return;
+
     this._paused = false;
     requestAnimationFrame( (time) => this.animate(time) );
   }
@@ -58,28 +67,6 @@ export class PersonalizedScene extends EventEmitter {
     this.emit('frame', time);
   
     this._renderer.render( this._scene, this._camera );
-  }
-
-  createTexturedCube(textureName: string) {
-    const geometry = new thr.BoxGeometry(1, 1, 1);
-    let texture;
-
-    try {
-      texture = this._textureLoader.load(textureName);
-    } catch (e) {
-      console.log(e);
-    }
-
-    const material = new thr.MeshPhongMaterial({
-      color: 0xffffff,
-      map: texture
-    });
-
-    const cube = new thr.Mesh( geometry, material );
-
-    this._scene.add(cube);
-
-    return cube;
   }
 
   get camera() {
@@ -97,17 +84,10 @@ export class PersonalizedScene extends EventEmitter {
   static createScene() {
     const PScene = new this();
 
-    const ambientLight = new thr.AmbientLight(0x555555);
-
-    const light = new thr.DirectionalLight();
-    light.position.set( 0.5, 0.5, 1 );
-
     const grid = new thr.GridHelper();
     grid.position.y -= 1;
 
-    PScene._scene.add( light );
     PScene._scene.add( grid );
-    PScene._scene.add( ambientLight );
 
     return PScene;
   }
