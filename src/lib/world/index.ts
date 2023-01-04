@@ -1,4 +1,4 @@
-import { WorldScene } from "./scene";
+import { WoldRender } from "./render";
 import * as thr from 'three';
 import { EventEmitter } from "events";
 import { PhysicCube, CubeTypes, CubeFaces } from "./physics/cube";
@@ -14,7 +14,7 @@ export class World extends EventEmitter {
     }
   ];
 
-  private _scene: WorldScene;
+  private _render: WoldRender;
   private _assets: WorldAssets;
   private _space: PhysicSpace;
   private _running: boolean;
@@ -24,14 +24,16 @@ export class World extends EventEmitter {
   constructor() {
     super();
 
-    this._assets = new WorldAssets();
-    this._space = new PhysicSpace();
-
     this._tickRate = World.defaultTickRate;
     this._tickCount = 0;
     this._running = false;
 
-    this._scene = WorldScene.createScene();
+    this._assets = new WorldAssets();
+    this._space = new PhysicSpace();
+    this._render = WoldRender.createRender();
+
+    this.space.on('added', cube => this.render.scene.add(cube));
+    this.space.on('removed', cube => this.render.scene.remove(cube));
   }
 
   on(eventName: 'tick', listener: (count: number) => void): this;
@@ -55,7 +57,7 @@ export class World extends EventEmitter {
 
         newChunk.push(cube);
 
-        this.scene.scene.add(cube);
+        this.render.scene.add(cube);
       }
     }
   }
@@ -65,7 +67,7 @@ export class World extends EventEmitter {
 
     this._running = true;
 
-    this._scene.start();
+    this._render.start();
 
     setTimeout(() => this.simulate());
   }
@@ -73,7 +75,7 @@ export class World extends EventEmitter {
   pause() {
     this._running = false;
 
-    this._scene.pause();
+    this._render.pause();
   }
 
   simulate() {
@@ -90,8 +92,8 @@ export class World extends EventEmitter {
     return this._running;
   }
 
-  get scene() {
-    return this._scene;
+  get render() {
+    return this._render;
   }
 
   get space() {

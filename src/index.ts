@@ -7,7 +7,7 @@ async function main() {
   const mouse = new MouseListener( document.body );
   const keyboard = new KeyboardListener( document.body );
 
-  const camera = world.scene.camera;
+  const camera = world.render.camera;
   const CAMERA_MOVEMENT_SPEED = 0.05;
   const CAMERA_ROTATE_SPEED = 0.01;
 
