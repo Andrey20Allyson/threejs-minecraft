@@ -1,7 +1,7 @@
 import * as thr from "three";
 import { EventEmitter } from "events";
 
-export class WorldScene extends EventEmitter {
+export class WoldRender extends EventEmitter {
   private _scene: thr.Scene;
   private _camera: thr.Camera;
   private _renderer: thr.WebGLRenderer;
@@ -81,7 +81,7 @@ export class WorldScene extends EventEmitter {
     return this._renderer;
   }
 
-  static createScene() {
+  static createRender() {
     const PScene = new this();
 
     const grid = new thr.GridHelper();
