@@ -14,24 +14,33 @@ export enum CubeFaces {
 }
 
 export abstract class PhysicCube extends thr.Mesh<thr.BoxGeometry, thr.MeshPhysicalMaterial[]> {
+  static readonly NUMBER_OF_FACES = 6;
   readonly cubeType: string;
 
   constructor(texture: thr.Texture) {
-    const geometry = new thr.BoxGeometry(1, 1, 1);
-    const faces = []
+    super(PhysicCube.createGeometry(), PhysicCube.createSimpleFaces(texture));
 
-    for (let i = 0; i < 6; i++) {
-      faces.push( new thr.MeshPhysicalMaterial({color: 0xffffff, map: texture}) );
-    }
-
-    super(geometry, faces);
-
-    if (this.material.length < 6)
-      throw new Error('faces cant be less than 6 faces');
+    if (!this.haveCubeFaces())
+      throw new Error('Dont have all cube faces!');
 
     this.cubeType = 'undefined';
+  }
 
-    this.getFace(CubeFaces.LEFT);
+  haveCubeFaces() {
+    return this.material.length === PhysicCube.NUMBER_OF_FACES;
+  }
+
+  static createGeometry() {
+    return new thr.BoxGeometry(1, 1, 1);
+  }
+
+  static createSimpleFaces(texture: thr.Texture) {
+    const faces = []; 
+
+    for (let i = 0; i < this.NUMBER_OF_FACES; i++)
+      faces.push(new thr.MeshPhysicalMaterial({color: 0xffffff, map: texture}));
+
+    return faces;
   }
 
   getFace(face: CubeFaces) {

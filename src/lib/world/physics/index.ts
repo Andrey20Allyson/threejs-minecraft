@@ -1,113 +1,14 @@
 import * as thr from 'three';
 import { Cube, CubeTypes, PhysicCube } from './cube';
+import { Chunk, ChunkLocation } from './chunk';
+import { EventEmitter } from 'events';
 
-export class ChunkLocation extends thr.Vector2 {
-  private constructor(x?: number, y?: number) {
-    super(x, y);
-  }
-
-  static fromXY(x: number, y: number) {
-    return new this(
-      Math.floor(x / Chunk.WIDTH),
-      Math.floor(y / Chunk.DEPTH)
-    );
-  }
-  
-  static fromVector2(position: thr.Vector2) {
-    const { x, y } = position;
-
-    return this.fromXY(x, y);
-  }
-
-  static fromVector3(position: thr.Vector3) {
-    const { x, z } = position;
-
-    return this.fromXY(x, z);
-  }
-}
-
-export class Chunk {
-  static readonly WIDTH = 16;
-  static readonly HEIGHT = 256;
-  static readonly DEPTH = 16;
-
-  private _location: ChunkLocation;
-  private _cubes: PhysicCube[];
-
-  constructor(x: number, y: number) {
-    this._cubes = new Array(Chunk.WIDTH * Chunk.DEPTH * Chunk.HEIGHT);
-
-    this._location = ChunkLocation.fromXY(x, y);
-  }
-
-  get location() {
-    return this._location;
-  }
-
-  set(x: number, y: number, z: number, value: PhysicCube) {
-    this._cubes[Chunk.parseIndex(x, y, z)] = value;
-  }
-
-  setByVector3(position: thr.Vector3, value: PhysicCube) {
-    const { x, y, z } = position;
-    this.set(x, y, z, value);
-  }
-
-  addCube(cube: PhysicCube) {
-    this.setByVector3(cube.position, cube);
-  }
-
-  get(x: number, y: number, z: number) {
-    return this.at(Chunk.parseIndex(x, y, z));
-  }
-
-  getByVector3(postion: thr.Vector3) {
-    const { x, y, z } = postion;
-    return this.get(x, y, z);
-  }
-
-  at(index: number): PhysicCube | undefined {
-    return this._cubes[index];
-  }
-
-  has(x: number, y: number, z: number) {
-    return this.get(x, y, z)? true: false;
-  }
-
-  hasInVector3(position: thr.Vector3) {
-    const { x, y, z } = position;
-    return this.has(x, y, z);
-  }
-
-  remove(x: number, y: number, z: number) {
-    const index = Chunk.parseIndex(x, y, z);
-
-    const cube = this.at(index);
-
-    delete this._cubes[index];
-  
-    return cube;
-  }
-
-  removeByVector3(position: thr.Vector3) {
-    const { x, y, z } = position
-    return this.remove(x, y, z);
-  }
-
-  static parseIndex(x: number, y: number, z: number) {
-    return (
-      (x % this.WIDTH ) +
-      (y % this.HEIGHT) * this.WIDTH +
-      (z % this.DEPTH ) * this.WIDTH * this.HEIGHT
-    ); 
-  }
-}
-
-export class PhysicSpace {
+export class PhysicSpace extends EventEmitter {
   private _chunks: Chunk[];
   private _entities: any[];
   
   constructor() {
+    super();
     this._chunks = [];
 
     this._entities = [];
@@ -115,6 +16,18 @@ export class PhysicSpace {
 
   get chunks() {
     return this._chunks;
+  }
+
+  on(eventName: 'added', listener: (cube: PhysicCube) => void): this;
+  on(eventName: 'removed', listener: (cube: PhysicCube) => void): this;
+  on(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    return super.on(eventName, listener);
+  }
+  
+  emit(eventName: 'added', cube: PhysicCube): boolean;
+  emit(eventName: 'removed', cube: PhysicCube): boolean;
+  emit(eventName: string | symbol, ...args: any[]): boolean {
+    return super.emit(eventName, ...args);
   }
 
   update() {
@@ -127,6 +40,11 @@ export class PhysicSpace {
     this._chunks.push(chunk);
 
     return chunk;
+  }
+  
+  createChunkByLocation(localtion: ChunkLocation) {
+    const { x, y } = localtion;
+    return this.createChunk(x, y);
   }
 
   getChunkByLocation(searchLocation: ChunkLocation) {
@@ -150,10 +68,18 @@ export class PhysicSpace {
     let chunk = this.getChunkByLocation(chunkLocation);
 
     if (!chunk)
-      chunk = this.createChunk(chunkLocation.x, chunkLocation.y);
+      chunk = this.createChunkByLocation(chunkLocation);
 
-    if (force || chunk.hasInVector3(cube.position))
+    const oldCube = chunk.getByVector3(cube.position)
+
+    if (force || !oldCube) {
       chunk.addCube(cube);
+
+      this.emit('added', cube);
+    }
+
+    if (force && oldCube)
+      this.emit('removed', oldCube);
   }
 
   addCube(cube: PhysicCube, position?: thr.Vector3) {
@@ -199,6 +125,11 @@ export class PhysicSpace {
 
     if (!chunk) return;
 
-    return chunk.removeByVector3(position);
+    const cube = chunk.removeByVector3(position);
+
+    if (cube)
+      this.emit('removed', cube);
+
+    return cube;
   }
 }
