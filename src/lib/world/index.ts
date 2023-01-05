@@ -53,10 +53,11 @@ export class World extends EventEmitter {
   generate() {
     const texture = this._assets.textures.get('better-dirt');
 
-    for (let k = 0; k < 4; k++)
-      for (let i = 0; i < 16 - k * 2; i++)
-        for (let j = 0; j < 16 - k * 2; j++)
-          this.space.createCube(new thr.Vector3(i + k, k, j + k), texture);
+      for (let i = 0; i < 36; i++)
+        for (let j = 0; j < 36; j++)
+          this.space.createCube(new thr.Vector3(i, i, j), texture);
+
+    console.log(this.space.chunks);
   }
 
   start() {

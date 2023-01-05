@@ -3,6 +3,19 @@ import { Cube, CubeFaces as CubeFace, CubeTypes, PhysicCube } from './cube';
 import { Chunk, ChunkLocation } from './chunk';
 import { EventEmitter } from 'events';
 
+export function addToCache<T>(cache: T[], value: T) {
+  const index = cache.indexOf(value, 1);
+        
+  if (index !== -1) {
+    const aux = cache[0];
+
+    cache[0] = cache[index];
+    cache[index] = aux; 
+  } else {
+    cache.unshift(value);
+  }
+}
+
 export type NeighborInfo = [number, number, number, CubeFace, CubeFace] 
 
 export class PhysicSpace extends EventEmitter {
@@ -44,27 +57,27 @@ export class PhysicSpace extends EventEmitter {
   update() {
     
   }
-
-  createChunk(x: number, y: number) {
-    const chunk = new Chunk(x, y);
+  
+  createChunk(localtion: ChunkLocation) {
+    const chunk = new Chunk(localtion);
 
     this._chunks.push(chunk);
 
     return chunk;
   }
-  
-  createChunkByLocation(localtion: ChunkLocation) {
-    const { x, y } = localtion;
-    return this.createChunk(x, y);
-  }
 
   getChunkByLocation(searchLocation: ChunkLocation) {
-    for (const chunk of this._chunks) {
-      const equals = chunk.location.x === searchLocation.x && chunk.location.y === searchLocation.y;
-      
-      if (equals)
-        return chunk;
-    }
+    return PhysicSpace.findChunkInLocation(this._chunks, searchLocation);
+  }
+
+  getChunkByLocationWithCache(cache: Chunk[], localtion: ChunkLocation) {
+    let chunk = PhysicSpace.findChunkInLocation(cache, localtion);
+
+    if (chunk) return chunk;
+
+    chunk = this.getChunkByLocation(localtion);
+
+    return chunk;
   }
 
   getChunkByVector3(position: thr.Vector3) {
@@ -73,12 +86,33 @@ export class PhysicSpace extends EventEmitter {
     return this.getChunkByLocation(searchLocation);
   }
 
+  getChunkByVector3WithCache(cache: Chunk[], position: thr.Vector3) {
+    const searchLocation = ChunkLocation.fromVector3(position);
+
+    return this.getChunkByLocationWithCache(cache, searchLocation);
+  }
+
   * neighborsOf(position: thr.Vector3): Generator<[PhysicCube, CubeFace, CubeFace]> {
     const { x, y, z } = position;
 
+    const cachedChunks: Chunk[] = [];
+
+    let chunk = this.getChunkByLocation(ChunkLocation.fromXY(x, z));
+
+    if (!chunk) return;
+
+    addToCache(cachedChunks, chunk);
+
     for (const [nx, ny, nz, face, neighborFace] of PhysicSpace.NEIGHBORS_POSITIONS) {
-      const chunk = this.getChunkByLocation(ChunkLocation.fromXY(x + nx, z + nz));
-      if (!chunk) continue;
+      const newChunkLocation = ChunkLocation.fromXY(x + nx, z + nz);
+
+      if (!newChunkLocation.equals(chunk.location)) {
+        const newChunk = this.getChunkByLocationWithCache(cachedChunks, newChunkLocation);
+        if (!newChunk) continue;
+
+        addToCache(cachedChunks, chunk);
+        chunk = newChunk;
+      }
 
       const cube = chunk.get(x + nx, y + ny, z + nz);
       if (!cube) continue;
@@ -106,7 +140,7 @@ export class PhysicSpace extends EventEmitter {
     let chunk = this.getChunkByLocation(chunkLocation);
 
     if (!chunk)
-      chunk = this.createChunkByLocation(chunkLocation);
+      chunk = this.createChunk(chunkLocation);
 
     const oldCube = chunk.getByVector3(cube.position);
 
@@ -170,5 +204,14 @@ export class PhysicSpace extends EventEmitter {
       this.emit('removed', cube);
 
     return cube;
+  }
+
+  static findChunkInLocation(chunks: Chunk[], searchLocation: ChunkLocation) {
+    for (const chunk of chunks) {
+      const equals = chunk.location.x === searchLocation.x && chunk.location.y === searchLocation.y;
+      
+      if (equals)
+        return chunk;
+    }
   }
 }

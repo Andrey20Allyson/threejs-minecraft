@@ -34,10 +34,10 @@ export class Chunk {
   private _location: ChunkLocation;
   private _cubes: PhysicCube[];
 
-  constructor(x: number, y: number) {
+  constructor(location: ChunkLocation) {
     this._cubes = new Array(Chunk.WIDTH * Chunk.DEPTH * Chunk.HEIGHT);
 
-    this._location = ChunkLocation.fromXY(x, y);
+    this._location = location;
   }
 
   get location() {

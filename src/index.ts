@@ -1,6 +1,7 @@
 import { World } from './lib/world';
 import { MouseListener, KeyboardListener } from './lib/inputs';
 import * as thr from 'three';
+import { Cube } from './lib/world/physics/cube';
 
 async function main() {
   const world = new World();
