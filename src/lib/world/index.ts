@@ -11,6 +11,10 @@ export class World extends EventEmitter {
     {
       name: 'dirt',
       url: './textures/Dirt.png',
+    },
+    {
+      name: 'better-dirt',
+      url: './textures/Dirt2.png'
     }
   ];
 
@@ -47,19 +51,12 @@ export class World extends EventEmitter {
   }
 
   generate() {
-    const newChunk = [];
+    const texture = this._assets.textures.get('better-dirt');
 
-    const texture = this._assets.textures.get('dirt');
-
-    for (let i = 0; i < 10; i++) {
-      for (let j = 0; j < 10; j++) {
-        const cube = this.space.createCube(new thr.Vector3(i, 0, j), texture);
-
-        newChunk.push(cube);
-
-        this.render.scene.add(cube);
-      }
-    }
+    for (let k = 0; k < 4; k++)
+      for (let i = 0; i < 16 - k * 2; i++)
+        for (let j = 0; j < 16 - k * 2; j++)
+          this.space.createCube(new thr.Vector3(i + k, k, j + k), texture);
   }
 
   start() {
